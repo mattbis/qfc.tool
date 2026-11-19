@@ -71,6 +71,7 @@ def run_gui() -> int:
     from qfc.ui.theme import DARK_QSS
 
     app = QApplication(sys.argv)
+    app.setStyle("Fusion")
     app.setApplicationName("QFC — FL Studio Formula Lab")
     app.setStyleSheet(DARK_QSS)
 

@@ -2,6 +2,19 @@
 
 **FL Studio Formula & DSP Transfer Function Lab** — a dark-themed PySide6 + PyQtGraph desktop app for writing, visualising, inspecting, and exporting FL Studio Mapping Formulas, Fruity Formula Controller expressions, and bipolar waveshaper transfer functions without fighting FL Studio's tiny single-line input box.
 
+![FL Mapping Formula Mode](qfc.py.png)
+
+<details>
+<summary>More screenshots: Formula Controller LFO &amp; Transfer / Waveshaper modes</summary>
+
+### Fruity Formula Controller Mode (`a`, `b`, `c`, `SongTime` & Live LFO Playhead)
+![Fruity Formula Controller Mode](docs/screenshot_controller.png)
+
+### Transfer Function / Waveshaper Mode (with Live Waveform & FFT Harmonic Preview)
+![Transfer Function and Waveshaper Mode](docs/screenshot_transfer.png)
+
+</details>
+
 ## Features
 
 - **Three Dedicated Visualisation Modes**

@@ -68,13 +68,22 @@ QPlainTextEdit:focus, QLineEdit:focus {{
     border: 1px solid {PALETTE["border_focus"]};
 }}
 
-QComboBox, QDoubleSpinBox, QSpinBox {{
+QComboBox {{
     background-color: {PALETTE["bg_elevated"]};
     color: {PALETTE["text"]};
     border: 1px solid {PALETTE["border"]};
     border-radius: 6px;
     padding: 4px 8px;
     min-height: 24px;
+}}
+
+QDoubleSpinBox, QSpinBox {{
+    background-color: {PALETTE["bg_elevated"]};
+    color: {PALETTE["text"]};
+    border: 1px solid {PALETTE["border"]};
+    border-radius: 5px;
+    padding: 2px 4px;
+    min-height: 22px;
 }}
 
 QComboBox:hover, QDoubleSpinBox:hover, QSpinBox:hover {{

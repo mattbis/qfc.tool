@@ -51,7 +51,7 @@ class ParameterSliderRow(QFrame):
         layout.setSpacing(6)
 
         self.lbl_name = QLabel(name)
-        self.lbl_name.setFixedWidth(62)
+        self.lbl_name.setFixedWidth(58)
         self.lbl_name.setStyleSheet(f"font-weight: 700; color: {accent_color}; background: transparent;")
         layout.addWidget(self.lbl_name)
 
@@ -59,8 +59,7 @@ class ParameterSliderRow(QFrame):
         self.spin_min.setRange(-10000.0, 10000.0)
         self.spin_min.setDecimals(2)
         self.spin_min.setValue(self._min)
-        self.spin_min.setFixedWidth(58)
-        self.spin_min.setButtonSymbols(QDoubleSpinBox.ButtonSymbols.NoButtons)
+        self.spin_min.setFixedWidth(64)
         self.spin_min.setToolTip("Slider minimum")
         self.spin_min.setVisible(not locked_range)
         layout.addWidget(self.spin_min)
@@ -73,8 +72,7 @@ class ParameterSliderRow(QFrame):
         self.spin_max.setRange(-10000.0, 10000.0)
         self.spin_max.setDecimals(2)
         self.spin_max.setValue(self._max)
-        self.spin_max.setFixedWidth(58)
-        self.spin_max.setButtonSymbols(QDoubleSpinBox.ButtonSymbols.NoButtons)
+        self.spin_max.setFixedWidth(64)
         self.spin_max.setToolTip("Slider maximum")
         self.spin_max.setVisible(not locked_range)
         layout.addWidget(self.spin_max)
@@ -83,8 +81,7 @@ class ParameterSliderRow(QFrame):
         self.spin_val.setRange(-100000.0, 100000.0)
         self.spin_val.setDecimals(3)
         self.spin_val.setSingleStep(0.05 if locked_range else 0.1)
-        self.spin_val.setFixedWidth(74)
-        self.spin_val.setButtonSymbols(QDoubleSpinBox.ButtonSymbols.NoButtons)
+        self.spin_val.setFixedWidth(82)
         self.spin_val.setToolTip(f"Exact value for {name} (type or scroll wheel)")
         layout.addWidget(self.spin_val)
 

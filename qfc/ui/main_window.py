@@ -200,7 +200,7 @@ class MainWindow(QMainWindow):
         layout.setSpacing(8)
 
         # --- Formula Editor Card ---
-        editor_box = QGroupBox("Formula Editor  (multi-line & // comments supported)")
+        editor_box = QGroupBox("Formula Editor  (multi-line && // comments supported)")
         ed_lay = QVBoxLayout(editor_box)
         ed_lay.setContentsMargins(10, 12, 10, 10)
         ed_lay.setSpacing(6)
@@ -274,7 +274,7 @@ class MainWindow(QMainWindow):
         layout.addWidget(export_box)
 
         # --- Fruity Formula Controller Transport & a/b/c Knobs (shown in Controller mode) ---
-        self.ctrl_box = QGroupBox("Fruity Formula Controller  (a / b / c & SongTime)")
+        self.ctrl_box = QGroupBox("Fruity Formula Controller  (a / b / c && SongTime)")
         ctrl_lay = QVBoxLayout(self.ctrl_box)
         ctrl_lay.setContentsMargins(10, 12, 10, 10)
         ctrl_lay.setSpacing(6)
@@ -392,7 +392,7 @@ class MainWindow(QMainWindow):
         self.chk_show_unity.setChecked(True)
         self.chk_show_unity.toggled.connect(self._update_plot_visibility)
 
-        self.chk_show_wave = QCheckBox("Waveform / FFT Preview")
+        self.chk_show_wave = QCheckBox("Wave / FFT")
         self.chk_show_wave.setChecked(False)
         self.chk_show_wave.toggled.connect(self._on_wave_toggle)
 
@@ -402,7 +402,7 @@ class MainWindow(QMainWindow):
         cb_lay.addWidget(self.chk_show_wave)
         cb_lay.addStretch(1)
 
-        self.lbl_cursor = QLabel("Hover plot to inspect (x, y)")
+        self.lbl_cursor = QLabel("Hover to inspect")
         self.lbl_cursor.setStyleSheet(
             f"font-family: 'Cascadia Code', monospace; font-size: 12px; color: {PALETTE['text_muted']}; background: transparent;"
         )
@@ -651,6 +651,13 @@ class MainWindow(QMainWindow):
             self._load_preset(PRESETS[preset_idx])
 
     def _load_preset(self, preset: FormulaPreset) -> None:
+        # Sync preset dropdown display
+        p_idx = self.combo_preset.findText(preset.name)
+        if p_idx >= 0:
+            self.combo_preset.blockSignals(True)
+            self.combo_preset.setCurrentIndex(p_idx)
+            self.combo_preset.blockSignals(False)
+
         # Select dialect first
         d_idx = self.combo_dialect.findData(preset.dialect)
         if d_idx >= 0:
