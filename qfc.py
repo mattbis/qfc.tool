@@ -1,111 +1,96 @@
-import tkinter as tk
-from tkinter import ttk
+"""Quick Formula Check (QFC) — FL Studio Formula & DSP Transfer Function Lab.
+
+Launch GUI:
+    python qfc.py
+
+Quick CLI bounds check (headless):
+    python qfc.py --check "Tension(Input, 40)"
+"""
+
+from __future__ import annotations
+
+import argparse
+import sys
+from pathlib import Path
+
 import numpy as np
-import matplotlib
-matplotlib.use("TkAgg")
-import matplotlib.pyplot as plt
-from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
-import re
 
-# ===== GLOBAL STATE =====
-params = {}
-sliders = {}
 
-# ===== SAFE EVAL =====
-def safe_eval(expr, x, params):
-    allowed = {
-        "x": x,
-        "pi": np.pi,
-        "sin": np.sin,
-        "cos": np.cos,
-        "np": np
-    }
-    allowed.update(params)
-    return eval(expr, {"__builtins__": {}}, allowed)
+def run_cli_check(formula: str, dialect_id: str, mode: str) -> int:
+    from qfc.analysis import analyze_curve
+    from qfc.dialects import DialectRegistry
+    from qfc.exporter import export_to_fl_studio
+    from qfc.parser import FormulaError, evaluate_ast, extract_custom_params, parse_formula
 
-# ===== FIND VARIABLES =====
-def extract_params(expr):
-    tokens = set(re.findall(r"[a-zA-Z_]\w*", expr))
-    blacklist = {"x", "sin", "cos", "pi", "np"}
-    return sorted(list(tokens - blacklist))
+    repo_root = Path(__file__).resolve().parent
+    registry = DialectRegistry(extra_dir=repo_root / "dialects")
+    dialect = registry.get(dialect_id)
 
-# ===== UPDATE PLOT =====
-def update_plot():
     try:
-        expr = formula_entry.get()
+        ast = parse_formula(formula, dialect)
+    except FormulaError as err:
+        print(f"SYNTAX ERROR: {err.message}", file=sys.stderr)
+        return 1
 
-        # update param values
-        for k in sliders:
-            params[k] = sliders[k].get()
+    x_lo, x_hi = (-1.0, 1.0) if mode == "transfer" else (0.0, 4.0 if mode == "controller" else 1.0)
+    t_lo, t_hi = (-1.0, 1.0) if mode == "transfer" else (0.0, 1.0)
 
-        xs = np.linspace(0, 1, 20000)
-        ys = safe_eval(expr, xs, params)
+    xs = np.linspace(x_lo, x_hi, 4096)
+    params = {p: 1.0 for p in extract_custom_params(ast, dialect)}
+    env = {
+        **params,
+        "x": xs,
+        "input": xs,
+        "Input": xs,
+        "songtime": xs,
+        "SongTime": xs,
+        "time": xs * (60000.0 / 128.0),
+        "a": 0.5,
+        "b": 0.5,
+        "c": 0.5,
+    }
+    ys = evaluate_ast(ast, dialect, env, size=len(xs))
+    report = analyze_curve(xs, ys, target_lo=t_lo, target_hi=t_hi)
+    fl_out, warnings = export_to_fl_studio(ast, dialect, param_values=params, bake_custom_params=True)
 
-        y_min = float(np.min(ys))
-        y_max = float(np.max(ys))
+    print(f"Dialect:    {dialect.name}  (mode={mode})")
+    print(f"Range:      min={report.y_min:.5f}  max={report.y_max:.5f}  mean={report.y_mean:.5f}")
+    print(f"Endpoints:  start={report.start_val:.5f}  mid={report.mid_val:.5f}  end={report.end_val:.5f}")
+    print(f"Bounds:     [{t_lo:g}, {t_hi:g}] -> {'OK' if report.within_bounds else f'CLIPPED {report.total_clip_pct:.2f}%'}")
+    print(f"Health:     NaN={report.nan_count}  Inf={report.inf_count}  Shape={report.monotonic}")
+    print(f"FL Export:  {fl_out}")
+    for w in warnings:
+        print(f"Warning:    {w}")
+    return 0
 
-        ax.clear()
-        ax.plot(xs, ys)
-        ax.set_title(f"min={y_min:.4f}  max={y_max:.4f}")
-        canvas.draw()
 
-    except Exception as e:
-        ax.clear()
-        ax.set_title(f"Error: {str(e)}")
-        canvas.draw()
+def run_gui() -> int:
+    from PySide6.QtWidgets import QApplication
 
-# ===== BUILD SLIDERS =====
-def build_sliders():
-    global sliders
-    for widget in slider_frame.winfo_children():
-        widget.destroy()
+    from qfc.ui.main_window import MainWindow
+    from qfc.ui.theme import DARK_QSS
 
-    sliders = {}
-    expr = formula_entry.get()
-    found = extract_params(expr)
+    app = QApplication(sys.argv)
+    app.setApplicationName("QFC — FL Studio Formula Lab")
+    app.setStyleSheet(DARK_QSS)
 
-    for name in found:
-        params[name] = 1.0
+    repo_root = Path(__file__).resolve().parent
+    window = MainWindow(dialects_dir=repo_root / "dialects")
+    window.show()
+    return app.exec()
 
-        frame = ttk.Frame(slider_frame)
-        frame.pack(fill="x")
 
-        label = ttk.Label(frame, text=name, width=8)
-        label.pack(side="left")
+def main() -> int:
+    parser = argparse.ArgumentParser(description="QFC — FL Studio Formula & DSP Transfer Function Lab")
+    parser.add_argument("--check", metavar="FORMULA", help="Headless CLI bounds check for a formula")
+    parser.add_argument("--dialect", default="fl_studio", help="Dialect ID (fl_studio, python, dsp_glsl)")
+    parser.add_argument("--mode", default="mapping", choices=["mapping", "controller", "transfer"])
+    args = parser.parse_args()
 
-        slider = tk.Scale(frame, from_=-10, to=10,
-                          resolution=0.01,
-                          orient="horizontal",
-                          command=lambda e: update_plot())
-        slider.set(1.0)
-        slider.pack(fill="x", expand=True)
+    if args.check:
+        return run_cli_check(args.check, args.dialect, args.mode)
+    return run_gui()
 
-        sliders[name] = slider
 
-    update_plot()
-
-# ===== UI =====
-root = tk.Tk()
-root.title("DSP Formula Lab")
-
-top_frame = ttk.Frame(root)
-top_frame.pack(fill="x")
-
-formula_entry = ttk.Entry(top_frame)
-formula_entry.pack(fill="x", padx=5, pady=5)
-formula_entry.insert(0, "0.7-(((2-(((cos(x*pi*c1))*cos(x*pi*c2)*amp)*mul))*scale)/norm)*(sin(x*freq/pi))")
-
-btn = ttk.Button(top_frame, text="Build Sliders", command=build_sliders)
-btn.pack(pady=5)
-
-slider_frame = ttk.Frame(root)
-slider_frame.pack(fill="both", expand=True)
-
-# ===== PLOT =====
-fig, ax = plt.subplots()
-canvas = FigureCanvasTkAgg(fig, master=root)
-canvas.get_tk_widget().pack(fill="both", expand=True)
-
-# ===== START =====
-build_sliders()
-root.mainloop()
+if __name__ == "__main__":
+    raise SystemExit(main())

@@ -1,0 +1,25 @@
+{
+  "id": "reaper_jsfx",
+  "name": "REAPER JSFX / EEL2 (Example)",
+  "description": "Example custom dialect loaded from dialects/*.json — demonstrates adding DAW/language dictionaries.",
+  "extends": "python",
+  "case_insensitive": true,
+  "caret_is_power": true,
+  "single_eq_is_comparison": false,
+  "constants": {
+    "$pi": 3.141592653589793,
+    "$e": 2.718281828459045
+  },
+  "function_aliases": {
+    "invsqrt": "sqrt",
+    "sqr": "sqr",
+    "sign": "sign",
+    "min": "min",
+    "max": "max"
+  },
+  "special_variables": {
+    "spl0": "Left audio sample (-1.0 to 1.0).",
+    "spl1": "Right audio sample (-1.0 to 1.0).",
+    "x": "Primary X-axis variable."
+  }
+}
